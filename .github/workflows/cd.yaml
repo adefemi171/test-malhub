@@ -23,9 +23,7 @@ jobs:
         aws eks update-kubeconfig --name ${{ secrets.DEMO_EKS_CLUSTER_NAME }}
         KUBE_CONFIG=$(cat $HOME/.kube/config | base64 | tr -d '\n')
         echo "KUBE_CONFIG=$KUBE_CONFIG" >> $GITHUB_ENV
-    - name: Configure kubectl
-      uses: actions-hub/kubectl@master
-      env:
-        KUBE_CONFIG: ${{ env.KUBE_CONFIG }}
-      with:
-        args: get pods -A
+    - name: List pods and namespaces
+      run: |
+        kubectl get pods --all-namespaces
+        kubeclt get namespaces
