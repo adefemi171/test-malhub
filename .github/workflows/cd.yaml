@@ -26,4 +26,4 @@ jobs:
     - name: List pods and namespaces
       run: |
         kubectl get pods --all-namespaces
-        kubeclt get namespaces
+        kubectl get namespaces
