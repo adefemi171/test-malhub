@@ -20,7 +20,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
     - name: Install and configure kubectl
       run: |
-        aws eks update-kubeconfig --name ${{ env.DEMO_EKS_CLUSTER_NAME }}
+        aws eks update-kubeconfig --name ${{ secrets.DEMO_EKS_CLUSTER_NAME }}
     - name: Configure kubectl
       uses: actions-hub/kubectl@master
     #   env:
