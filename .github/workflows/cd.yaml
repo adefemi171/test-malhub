@@ -64,6 +64,7 @@ jobs:
               id: branch_name
               run: |
                   if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+                      echo "Branch Name from pull_request event: ${{ github.event.pull_request.head.ref }}"
                       echo "::set-output name=branch::${{ github.event.pull_request.head.ref }}"
                   elif [[ ${{ github.event_name }} == 'issue_comment' ]]; then
                       PR_URL="${{ github.event.issue.pull_request.url }}"
