@@ -79,7 +79,6 @@ jobs:
                   fi
 
             - name: Test Output
-              id: branch_name
               run: |
                   echo "Branch Name: ${{ steps.branch_name.outputs.branch }}
     
