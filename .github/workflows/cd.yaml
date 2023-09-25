@@ -1,29 +1,73 @@
-name: Get pods
-on: [push]
-env:
-    AWS_REGION: us-east-1
-jobs:
-  deploy:
-    name: Deploy
-    runs-on: ubuntu-latest
+# name: Get pods
+# on: [push]
+# env:
+#     AWS_REGION: us-east-1
+# jobs:
+#   deploy:
+#     name: Deploy
+#     runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout
-      id: checkout
-      uses: actions/checkout@v3
-    - name: Configure AWS credentials
-      id: configure-aws
-      uses: aws-actions/configure-aws-credentials@v3
-      with:
-          aws-access-key-id: ${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-    - name: Install and configure kubectl
-      run: |
-        aws eks update-kubeconfig --name ${{ secrets.DEMO_EKS_CLUSTER_NAME }}
-        KUBE_CONFIG=$(cat $HOME/.kube/config | base64 | tr -d '\n')
-        echo "KUBE_CONFIG=$KUBE_CONFIG" >> $GITHUB_ENV
-    - name: List pods and namespaces
-      run: |
-        kubectl get pods --all-namespaces
-        kubectl get namespaces
+#     steps:
+#     - name: Checkout
+#       id: checkout
+#       uses: actions/checkout@v3
+#     - name: Configure AWS credentials
+#       id: configure-aws
+#       uses: aws-actions/configure-aws-credentials@v3
+#       with:
+#           aws-access-key-id: ${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+#     - name: Install and configure kubectl
+#       run: |
+#         aws eks update-kubeconfig --name ${{ secrets.DEMO_EKS_CLUSTER_NAME }}
+#         KUBE_CONFIG=$(cat $HOME/.kube/config | base64 | tr -d '\n')
+#         echo "KUBE_CONFIG=$KUBE_CONFIG" >> $GITHUB_ENV
+#     - name: List pods and namespaces
+#       run: |
+#         kubectl get pods --all-namespaces
+#         kubectl get namespaces
+name: Preview Environment Deployment - CD
+
+on:
+    pull_request:
+        branches:
+            - main
+        types: [closed, opened, synchronize, reopened]
+    issue_comment:
+        types: [created]
+
+env:
+permissions:
+    contents: read
+    packages: write
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        if: contains(github.event.comment.body, '/preview deploy')
+        permissions:
+            contents: read
+            packages: write
+        steps:
+            - name: Checkout
+              id: checkout
+              uses: actions/checkout@v3
+
+            - name: Install jq
+              run: sudo apt-get update && sudo apt-get install -y jq
+
+            - name: Extract branch name
+              id: branch_name
+              run: |
+                  if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+                      echo "::set-output name=branch::${{ github.event.pull_request.head.ref }}"
+                  elif [[ ${{ github.event_name }} == 'issue_comment' ]]; then
+                      PR_URL="${{ github.event.issue.pull_request.url }}"
+                      PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" $PR_URL)
+                      BRANCH_NAME=$(echo $PR_DATA | jq -r '.head.ref')
+                      echo "::set-output name=branch::${BRANCH_NAME}"
+                  else
+                      echo "::error::Unexpected event type: ${{ github.event_name }}"
+                      exit 1
+                  fi
