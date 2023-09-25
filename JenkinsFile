@@ -29,7 +29,3 @@ pipeline {
 //                 sh 'python --version'
 //                 sh 'python test.py'
                 
-//             }
-//         }
-//     }
-// }
